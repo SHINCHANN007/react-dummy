@@ -1,31 +1,26 @@
-import { useEffect, useRef } from "react";
-import mermaid from "mermaid";
-
-export default function Diagram({ model }) {
-  const ref = useRef();
-
-  useEffect(() => {
-    if (!model) return;
-
-    let text = "graph LR\n";
-
-    model.measurement.forEach(m => {
-      text += `${m.observed}[${m.observed}] --> ${m.latent}((${m.latent}))\n`;
-    });
-
-    model.structural.forEach(s => {
-      text += `${s.latent}((${s.latent})) --> ${s.output}[${s.output}]\n`;
-    });
-
-    mermaid.initialize({ startOnLoad: false });
-    ref.current.innerHTML = text;
-    mermaid.run({ nodes: [ref.current] });
-  }, [model]);
-
-  return (
-    <div className="box">
-      <h2>SEM Diagram</h2>
-      <div ref={ref} className="mermaid"></div>
-    </div>
+const generateDiagram = () => {
+  const validMeasurement = measurement.filter(
+    m => m.observed && m.latent
   );
-}
+  const validStructural = structural.filter(
+    s => s.latent && s.output
+  );
+
+  if (!validMeasurement.length || !validStructural.length) {
+    alert("Invalid or incomplete SEM model.");
+    return;
+  }
+
+  let graph = "graph LR\n";
+
+  validMeasurement.forEach(m => {
+    graph += `${safeId(m.observed)}[${m.observed}] --> ${safeId(m.latent)}((${m.latent}))\n`;
+  });
+
+  validStructural.forEach(s => {
+    graph += `${safeId(s.latent)}((${s.latent})) --> ${safeId(s.output)}[${s.output}]\n`;
+  });
+
+  diagramRef.current.innerHTML = graph;
+  mermaid.run({ nodes: [diagramRef.current] });
+};
