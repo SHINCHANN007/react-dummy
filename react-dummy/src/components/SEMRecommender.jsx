@@ -4,7 +4,8 @@ import { useState } from "react";
 const API_KEYS = [
   "AIzaSyBijCT8xiPcL9I8ymPl2MWOJkjHkwivPM8",
   "AIzaSyAjnXVUDU7UPgjbsIuNgInXzQa9_jI2vro",
-  "AIzaSyBoDdiJEHspOdG-wvBKMqbgwkCc7NbG-44"
+  "AIzaSyBoDdiJEHspOdG-wvBKMqbgwkCc7NbG-44",
+  "AIzaSyCpUWfLPA4-DKs0BXMKfJ6sZbt1CC6ElbU"
 ];
 
 let keyIndex = 0;

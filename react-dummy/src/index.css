@@ -636,3 +636,106 @@ em {
     gap: 20px;
   }
 }
+
+/* ===============================
+   SEM EXAMPLE RECOMMENDER
+================================ */
+.sem-recommender {
+  margin-bottom: 16px;
+}
+
+.sem-recommender .top-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sem-recommender .counter {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--warning-amber);
+  white-space: nowrap;
+}
+
+/* ===============================
+   AI EXAMPLE CARDS
+================================ */
+/* ===============================
+   AI EXAMPLE CARDS (FINAL)
+================================ */
+.example-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--accent-primary);
+  border-radius: 6px;
+  padding: 14px;
+  margin-top: 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 👈 THIS is the main spacing fix */
+}
+
+.example-card h3 {
+  font-size: 0.9rem;
+  color: var(--parchment);
+  margin-bottom: 2px;
+}
+
+.example-card p {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--chalk-dim);
+}
+
+.example-card strong {
+  color: var(--parchment);
+}
+
+.example-card .apply-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+
+/* ===============================
+   APPLY EXAMPLE BUTTON
+================================ */
+.apply-btn {
+  margin-top: 8px;
+  background: var(--parchment);
+  color: var(--coffee-dark);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.apply-btn:hover {
+  background: #fff;
+}
+
+/* ===============================
+   RECOMMENDER STATES
+================================ */
+.loading-box,
+.error-message {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.loading-box {
+  background: rgba(44, 95, 141, 0.15);
+  color: var(--chalk-white);
+}
+
+.error-message {
+  background: rgba(200, 90, 79, 0.15);
+  color: var(--error-rust);
+}
