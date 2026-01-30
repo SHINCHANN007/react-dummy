@@ -1,26 +1,45 @@
 const generateDiagram = () => {
-  const validMeasurement = measurement.filter(
-    m => m.observed && m.latent
-  );
-  const validStructural = structural.filter(
-    s => s.latent && s.output
-  );
+  const measurement = [];
+  const structural = [];
 
-  if (!validMeasurement.length || !validStructural.length) {
+  document
+    .querySelectorAll('input[type="checkbox"]:checked')
+    .forEach(cb => {
+      if (cb.dataset.type === "measurement") {
+        measurement.push({
+          observed: clean(cb.dataset.observed),
+          latent: clean(cb.dataset.latent)
+        });
+      }
+
+      if (cb.dataset.type === "structural") {
+        if (cb.dataset.latent !== cb.dataset.output) {
+          structural.push({
+            latent: clean(cb.dataset.latent),
+            output: clean(cb.dataset.output)
+          });
+        }
+      }
+    });
+
+  if (!measurement.length || !structural.length) {
     alert("Invalid or incomplete SEM model.");
     return;
   }
 
   let graph = "graph LR\n";
 
-  validMeasurement.forEach(m => {
+  measurement.forEach(m => {
     graph += `${safeId(m.observed)}[${m.observed}] --> ${safeId(m.latent)}((${m.latent}))\n`;
   });
 
-  validStructural.forEach(s => {
+  structural.forEach(s => {
     graph += `${safeId(s.latent)}((${s.latent})) --> ${safeId(s.output)}[${s.output}]\n`;
   });
 
-  diagramRef.current.innerHTML = graph;
+  diagramRef.current.innerHTML = "";
+  diagramRef.current.removeAttribute("data-processed");
+  diagramRef.current.textContent = graph;
+
   mermaid.run({ nodes: [diagramRef.current] });
 };

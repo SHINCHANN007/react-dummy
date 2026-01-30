@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid/dist/mermaid.esm.mjs";
 import SEMRecommender from "./components/SEMRecommender";
+import Summary from "./components/Summary";
 
+/* helpers */
 const clean = v => v.trim();
 const safeId = v => v.trim().replace(/\s+/g, "_");
 
@@ -14,22 +16,16 @@ export default function App() {
   const [latent, setLatent] = useState([]);
   const [outputs, setOutputs] = useState([]);
 
-  const [measurement, setMeasurement] = useState([]);
-  const [structural, setStructural] = useState([]);
+  const [modelSummary, setModelSummary] = useState(null);
 
   const diagramRef = useRef(null);
 
-  /* 🔧 Mermaid init */
+  /* Mermaid init */
   useEffect(() => {
     mermaid.initialize({ startOnLoad: false });
   }, []);
 
-  /* 🔒 Remove invalid self-loops automatically */
-  useEffect(() => {
-    setStructural(prev => prev.filter(s => s.latent !== s.output));
-  }, [latent, outputs]);
-
-  /* 🌉 BRIDGE: allow SEMRecommender to inject data safely */
+  /* AI → inject clean state */
   useEffect(() => {
     window.applySEMFromAI = ({ observed, latent, outputs }) => {
       setObserved(observed);
@@ -40,38 +36,59 @@ export default function App() {
       setLatentCount(latent.length);
       setOutputCount(outputs.length);
 
-      setMeasurement([]);
-      setStructural([]);
-
-      setTimeout(() => {
-        document
-          .querySelector(".grid-container")
-          ?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      setModelSummary(null);
     };
   }, []);
 
-  /* 📊 Generate Mermaid diagram */
+  /* 🔥 BUILD MODEL FRESH EVERY TIME */
   const generateDiagram = () => {
-    const mValid = measurement.filter(m => m.observed && m.latent);
-    const sValid = structural.filter(
-      s => s.latent && s.output && s.latent !== s.output
-    );
+    const measurement = [];
+    const structural = [];
 
-    if (!mValid.length || !sValid.length) {
+    document
+      .querySelectorAll('input[type="checkbox"]:checked')
+      .forEach(cb => {
+        /* measurement */
+        if (cb.dataset.type === "measurement") {
+          if (!cb.dataset.observed || !cb.dataset.latent) return;
+
+          measurement.push({
+            observed: clean(cb.dataset.observed),
+            latent: clean(cb.dataset.latent)
+          });
+        }
+
+        /* structural */
+        if (cb.dataset.type === "structural") {
+          if (
+            !cb.dataset.latent ||
+            !cb.dataset.output ||
+            clean(cb.dataset.latent) === clean(cb.dataset.output)
+          )
+            return;
+
+          structural.push({
+            latent: clean(cb.dataset.latent),
+            output: clean(cb.dataset.output)
+          });
+        }
+      });
+
+    if (!measurement.length || !structural.length) {
       alert("Invalid or incomplete SEM model.");
       return;
     }
 
+    /* Build Mermaid */
     let graph = "graph LR\n";
 
-    mValid.forEach(m => {
+    measurement.forEach(m => {
       graph += `${safeId(m.observed)}[${m.observed}] --> ${safeId(
         m.latent
       )}((${m.latent}))\n`;
     });
 
-    sValid.forEach(s => {
+    structural.forEach(s => {
       graph += `${safeId(s.latent)}((${s.latent})) --> ${safeId(
         s.output
       )}[${s.output}]\n`;
@@ -82,6 +99,8 @@ export default function App() {
     diagramRef.current.textContent = graph;
 
     mermaid.run({ nodes: [diagramRef.current] });
+
+    setModelSummary({ measurement, structural });
   };
 
   return (
@@ -93,7 +112,6 @@ export default function App() {
         latent constructs, and outcomes are connected.
       </p>
 
-      {/* 🔍 AI SEM EXAMPLE RECOMMENDER */}
       <SEMRecommender />
 
       <div className="grid-container">
@@ -107,25 +125,22 @@ export default function App() {
             value={obsCount}
             onChange={e => setObsCount(+e.target.value)}
           />
-
           <button onClick={() => setObserved(Array(obsCount).fill(""))}>
             Create
           </button>
 
-          <div id="observedInputs">
-            {observed.map((v, i) => (
-              <input
-                key={i}
-                placeholder={`Observed variable ${i + 1}`}
-                value={v}
-                onChange={e => {
-                  const copy = [...observed];
-                  copy[i] = e.target.value;
-                  setObserved(copy);
-                }}
-              />
-            ))}
-          </div>
+          {observed.map((v, i) => (
+            <input
+              key={i}
+              placeholder={`Observed variable ${i + 1}`}
+              value={v}
+              onChange={e => {
+                const copy = [...observed];
+                copy[i] = e.target.value;
+                setObserved(copy);
+              }}
+            />
+          ))}
         </div>
 
         {/* STEP 2 */}
@@ -138,76 +153,51 @@ export default function App() {
             value={latentCount}
             onChange={e => setLatentCount(+e.target.value)}
           />
-
           <button onClick={() => setLatent(Array(latentCount).fill(""))}>
             Create
           </button>
 
-          <div id="latentInputs">
-            {latent.map((v, i) => (
-              <input
-                key={i}
-                placeholder={`Latent variable ${i + 1}`}
-                value={v}
-                onChange={e => {
-                  const copy = [...latent];
-                  copy[i] = e.target.value;
-                  setLatent(copy);
-                }}
-              />
-            ))}
-          </div>
+          {latent.map((v, i) => (
+            <input
+              key={i}
+              placeholder={`Latent variable ${i + 1}`}
+              value={v}
+              onChange={e => {
+                const copy = [...latent];
+                copy[i] = e.target.value;
+                setLatent(copy);
+              }}
+            />
+          ))}
         </div>
 
         {/* STEP 3 */}
         <div className="box">
           <h2>Step 3: Measurement Model</h2>
 
-          <div id="measurementInputs">
-            {!observed.length || !latent.length ? (
-              <em>Fill Steps 1 and 2 first.</em>
-            ) : (
-              latent.map(lv => (
-                <div key={lv} className="latent-card">
-                  <h4>🟣 {lv}</h4>
+          {latent
+            .map(clean)
+            .filter(Boolean)
+            .map(lv => (
+              <div key={lv} className="latent-card">
+                <h4>🟣 {lv}</h4>
 
-                  {observed.map(ov => (
+                {observed
+                  .map(clean)
+                  .filter(Boolean)
+                  .map(ov => (
                     <label key={ov}>
                       <input
                         type="checkbox"
-                        onChange={e => {
-                          setMeasurement(prev => {
-                            const exists = prev.find(
-                              x => x.observed === ov && x.latent === lv
-                            );
-
-                            if (e.target.checked && !exists) {
-                              return [
-                                ...prev,
-                                { observed: clean(ov), latent: clean(lv) }
-                              ];
-                            }
-
-                            if (!e.target.checked && exists) {
-                              return prev.filter(
-                                x =>
-                                  !(
-                                    x.observed === ov && x.latent === lv
-                                  )
-                              );
-                            }
-
-                            return prev;
-                          });
-                        }}
+                        data-type="measurement"
+                        data-observed={ov}
+                        data-latent={lv}
                       />
                       {ov}
                     </label>
                   ))}
-                </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))}
         </div>
 
         {/* STEP 4 */}
@@ -220,25 +210,22 @@ export default function App() {
             value={outputCount}
             onChange={e => setOutputCount(+e.target.value)}
           />
-
           <button onClick={() => setOutputs(Array(outputCount).fill(""))}>
             Create
           </button>
 
-          <div id="outputInputs">
-            {outputs.map((v, i) => (
-              <input
-                key={i}
-                placeholder={`Output variable ${i + 1}`}
-                value={v}
-                onChange={e => {
-                  const copy = [...outputs];
-                  copy[i] = e.target.value;
-                  setOutputs(copy);
-                }}
-              />
-            ))}
-          </div>
+          {outputs.map((v, i) => (
+            <input
+              key={i}
+              placeholder={`Output variable ${i + 1}`}
+              value={v}
+              onChange={e => {
+                const copy = [...outputs];
+                copy[i] = e.target.value;
+                setOutputs(copy);
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -246,47 +233,29 @@ export default function App() {
       <div className="box">
         <h2>Step 5: Structural Model</h2>
 
-        <div id="structuralInputs">
-          {outputs.map(o => (
+        {outputs
+          .map(clean)
+          .filter(Boolean)
+          .map(o => (
             <div key={o} className="latent-card">
               <h4>🎯 {o}</h4>
 
-              {latent.filter(lv => lv !== o).map(lv => (
-                <label key={lv}>
-                  <input
-                    type="checkbox"
-                    onChange={e => {
-                      setStructural(prev => {
-                        const exists = prev.find(
-                          x => x.latent === lv && x.output === o
-                        );
-
-                        if (e.target.checked && !exists) {
-                          return [
-                            ...prev,
-                            { latent: clean(lv), output: clean(o) }
-                          ];
-                        }
-
-                        if (!e.target.checked && exists) {
-                          return prev.filter(
-                            x =>
-                              !(
-                                x.latent === lv && x.output === o
-                              )
-                          );
-                        }
-
-                        return prev;
-                      });
-                    }}
-                  />
-                  {lv}
-                </label>
-              ))}
+              {latent
+                .map(clean)
+                .filter(lv => lv && lv !== o)
+                .map(lv => (
+                  <label key={lv}>
+                    <input
+                      type="checkbox"
+                      data-type="structural"
+                      data-latent={lv}
+                      data-output={o}
+                    />
+                    {lv}
+                  </label>
+                ))}
             </div>
           ))}
-        </div>
       </div>
 
       <div className="box center">
@@ -300,10 +269,7 @@ export default function App() {
         <div id="diagram" ref={diagramRef} className="mermaid"></div>
       </div>
 
-      <div className="box">
-        <h2>SEM Model Output</h2>
-        <div id="modelSummary"></div>
-      </div>
+      {modelSummary && <Summary model={modelSummary} />}
     </>
   );
 }

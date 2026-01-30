@@ -5,7 +5,8 @@ const API_KEYS = [
   "AIzaSyBijCT8xiPcL9I8ymPl2MWOJkjHkwivPM8",
   "AIzaSyAjnXVUDU7UPgjbsIuNgInXzQa9_jI2vro",
   "AIzaSyBoDdiJEHspOdG-wvBKMqbgwkCc7NbG-44",
-  "AIzaSyCpUWfLPA4-DKs0BXMKfJ6sZbt1CC6ElbU"
+  "AIzaSyCpUWfLPA4-DKs0BXMKfJ6sZbt1CC6ElbU",
+  "AIzaSyAgtix3D7qmQLBQ_D0Zh2zyxR4tHBzQDXo"
 ];
 
 let keyIndex = 0;

@@ -1,58 +1,36 @@
-export default function StepStructural({
-  latent,
-  outputs,
-  measurement,
-  setModel
-}) {
+export default function StepStructural({ latent, outputs }) {
   if (!latent.length || !outputs.length) {
-    return <div className="box"><em>Define latent and outputs first.</em></div>;
+    return (
+      <div className="box">
+        <h2>Step 5: Structural Model</h2>
+        <em>Define latent and output variables first.</em>
+      </div>
+    );
   }
-
-  const generate = () => {
-    const structural = [];
-
-    document
-      .querySelectorAll('input[data-output]:checked')
-      .forEach(cb => {
-        structural.push({
-          latent: cb.value,
-          output: cb.dataset.output
-        });
-      });
-
-    if (!structural.length) {
-      alert("Define at least one structural path");
-      return;
-    }
-
-    setModel({
-      measurement,
-      structural
-    });
-  };
 
   return (
     <div className="box">
       <h2>Step 5: Structural Model</h2>
 
-      {outputs.map(o => (
-        <div key={o} className="latent-card">
-          <h4>🎯 {o}</h4>
+      {outputs.map(out => (
+        <div key={out} className="latent-card">
+          <h4>🎯 {out}</h4>
 
-          {latent.map(lv => (
-            <label key={lv} className="checkbox">
-              <input
-                type="checkbox"
-                data-output={o}
-                value={lv}
-              />
-              {lv}
-            </label>
-          ))}
+          {latent
+            .filter(lv => lv !== out) // ❌ block self-loops
+            .map(lv => (
+              <label key={`${lv}-${out}`}>
+                <input
+                  type="checkbox"
+                  data-type="structural"
+                  data-latent={lv}
+                  data-output={out}
+                />
+                {lv}
+              </label>
+            ))}
         </div>
       ))}
-
-      <button onClick={generate}>Generate SEM Diagram</button>
     </div>
   );
 }
