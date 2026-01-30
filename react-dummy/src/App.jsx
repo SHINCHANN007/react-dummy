@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid/dist/mermaid.esm.mjs";
+import SEMRecommender from "./components/SEMRecommender";
 
 const clean = v => v.trim();
 const safeId = v => v.trim().replace(/\s+/g, "_");
@@ -18,13 +19,44 @@ export default function App() {
 
   const diagramRef = useRef(null);
 
+  /* 🔧 Mermaid init */
   useEffect(() => {
     mermaid.initialize({ startOnLoad: false });
   }, []);
 
+  /* 🔒 Remove invalid self-loops automatically */
+  useEffect(() => {
+    setStructural(prev => prev.filter(s => s.latent !== s.output));
+  }, [latent, outputs]);
+
+  /* 🌉 BRIDGE: allow SEMRecommender to inject data safely */
+  useEffect(() => {
+    window.applySEMFromAI = ({ observed, latent, outputs }) => {
+      setObserved(observed);
+      setLatent(latent);
+      setOutputs(outputs);
+
+      setObsCount(observed.length);
+      setLatentCount(latent.length);
+      setOutputCount(outputs.length);
+
+      setMeasurement([]);
+      setStructural([]);
+
+      setTimeout(() => {
+        document
+          .querySelector(".grid-container")
+          ?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    };
+  }, []);
+
+  /* 📊 Generate Mermaid diagram */
   const generateDiagram = () => {
     const mValid = measurement.filter(m => m.observed && m.latent);
-    const sValid = structural.filter(s => s.latent && s.output);
+    const sValid = structural.filter(
+      s => s.latent && s.output && s.latent !== s.output
+    );
 
     if (!mValid.length || !sValid.length) {
       alert("Invalid or incomplete SEM model.");
@@ -34,14 +66,21 @@ export default function App() {
     let graph = "graph LR\n";
 
     mValid.forEach(m => {
-      graph += `${safeId(m.observed)}[${m.observed}] --> ${safeId(m.latent)}((${m.latent}))\n`;
+      graph += `${safeId(m.observed)}[${m.observed}] --> ${safeId(
+        m.latent
+      )}((${m.latent}))\n`;
     });
 
     sValid.forEach(s => {
-      graph += `${safeId(s.latent)}((${s.latent})) --> ${safeId(s.output)}[${s.output}]\n`;
+      graph += `${safeId(s.latent)}((${s.latent})) --> ${safeId(
+        s.output
+      )}[${s.output}]\n`;
     });
 
-    diagramRef.current.innerHTML = graph;
+    diagramRef.current.innerHTML = "";
+    diagramRef.current.removeAttribute("data-processed");
+    diagramRef.current.textContent = graph;
+
     mermaid.run({ nodes: [diagramRef.current] });
   };
 
@@ -54,17 +93,21 @@ export default function App() {
         latent constructs, and outcomes are connected.
       </p>
 
-      <div className="grid-container">
+      {/* 🔍 AI SEM EXAMPLE RECOMMENDER */}
+      <SEMRecommender />
 
+      <div className="grid-container">
         {/* STEP 1 */}
         <div className="box">
           <h2>Step 1: Observed Variables</h2>
+
           <input
             type="number"
             min="1"
             value={obsCount}
             onChange={e => setObsCount(+e.target.value)}
           />
+
           <button onClick={() => setObserved(Array(obsCount).fill(""))}>
             Create
           </button>
@@ -88,12 +131,14 @@ export default function App() {
         {/* STEP 2 */}
         <div className="box">
           <h2>Step 2: Latent Variables</h2>
+
           <input
             type="number"
             min="1"
             value={latentCount}
             onChange={e => setLatentCount(+e.target.value)}
           />
+
           <button onClick={() => setLatent(Array(latentCount).fill(""))}>
             Create
           </button>
@@ -137,12 +182,18 @@ export default function App() {
                             );
 
                             if (e.target.checked && !exists) {
-                              return [...prev, { observed: clean(ov), latent: clean(lv) }];
+                              return [
+                                ...prev,
+                                { observed: clean(ov), latent: clean(lv) }
+                              ];
                             }
 
                             if (!e.target.checked && exists) {
                               return prev.filter(
-                                x => !(x.observed === ov && x.latent === lv)
+                                x =>
+                                  !(
+                                    x.observed === ov && x.latent === lv
+                                  )
                               );
                             }
 
@@ -162,12 +213,14 @@ export default function App() {
         {/* STEP 4 */}
         <div className="box">
           <h2>Step 4: Output Variables</h2>
+
           <input
             type="number"
             min="1"
             value={outputCount}
             onChange={e => setOutputCount(+e.target.value)}
           />
+
           <button onClick={() => setOutputs(Array(outputCount).fill(""))}>
             Create
           </button>
@@ -198,7 +251,7 @@ export default function App() {
             <div key={o} className="latent-card">
               <h4>🎯 {o}</h4>
 
-              {latent.map(lv => (
+              {latent.filter(lv => lv !== o).map(lv => (
                 <label key={lv}>
                   <input
                     type="checkbox"
@@ -209,12 +262,18 @@ export default function App() {
                         );
 
                         if (e.target.checked && !exists) {
-                          return [...prev, { latent: clean(lv), output: clean(o) }];
+                          return [
+                            ...prev,
+                            { latent: clean(lv), output: clean(o) }
+                          ];
                         }
 
                         if (!e.target.checked && exists) {
                           return prev.filter(
-                            x => !(x.latent === lv && x.output === o)
+                            x =>
+                              !(
+                                x.latent === lv && x.output === o
+                              )
                           );
                         }
 
