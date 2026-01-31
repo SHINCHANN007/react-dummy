@@ -26,19 +26,45 @@ export default function App() {
   }, []);
 
   /* AI → inject clean state */
-  useEffect(() => {
-    window.applySEMFromAI = ({ observed, latent, outputs }) => {
-      setObserved(observed);
-      setLatent(latent);
-      setOutputs(outputs);
+  /* AI → inject clean & COMPLETE state */
+useEffect(() => {
+  window.applySEMFromAI = ({ observed, latent, outputs }) => {
+    // 1. Set variables
+    setObserved(observed);
+    setLatent(latent);
+    setOutputs(outputs);
 
-      setObsCount(observed.length);
-      setLatentCount(latent.length);
-      setOutputCount(outputs.length);
+    setObsCount(observed.length);
+    setLatentCount(latent.length);
+    setOutputCount(outputs.length);
 
-      setModelSummary(null);
-    };
-  }, []);
+    // 2. 🔥 AUTO-BUILD MEASUREMENT MODEL (CFA)
+    // Each latent is measured by ALL observed
+    const measurementLinks = {};
+    latent.forEach(lv => {
+      measurementLinks[lv] = {};
+      observed.forEach(ov => {
+        measurementLinks[lv][ov] = true;
+      });
+    });
+    setMeasurementModel(measurementLinks);
+
+    // 3. 🔥 AUTO-BUILD STRUCTURAL MODEL (PATHS)
+    // Each latent predicts ALL outputs
+    const structuralLinks = {};
+    latent.forEach(lv => {
+      structuralLinks[lv] = {};
+      outputs.forEach(out => {
+        structuralLinks[lv][out] = true;
+      });
+    });
+    setStructuralModel(structuralLinks);
+
+    // 4. Reset summary so diagram rebuilds clean
+    setModelSummary(null);
+  };
+}, []);
+
 
   /* 🔥 BUILD MODEL FRESH EVERY TIME */
   const generateDiagram = () => {
@@ -119,56 +145,66 @@ export default function App() {
         <div className="box">
           <h2>Step 1: Observed Variables</h2>
 
-          <input
-            type="number"
-            min="1"
-            value={obsCount}
-            onChange={e => setObsCount(+e.target.value)}
-          />
-          <button onClick={() => setObserved(Array(obsCount).fill(""))}>
-            Create
-          </button>
-
-          {observed.map((v, i) => (
+          <div className="input-row">
             <input
-              key={i}
-              placeholder={`Observed variable ${i + 1}`}
-              value={v}
-              onChange={e => {
-                const copy = [...observed];
-                copy[i] = e.target.value;
-                setObserved(copy);
-              }}
+              type="number"
+              min="1"
+              value={obsCount}
+              onChange={e => setObsCount(+e.target.value)}
             />
-          ))}
+            <button onClick={() => setObserved(Array(obsCount).fill(""))}>
+              Create
+            </button>
+          </div>
+
+          <div id="observedInputs">
+            {observed.map((v, i) => (
+              <input
+                key={i}
+                type="text"
+                placeholder={`Observed variable ${i + 1}`}
+                value={v}
+                onChange={e => {
+                  const copy = [...observed];
+                  copy[i] = e.target.value;
+                  setObserved(copy);
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         {/* STEP 2 */}
         <div className="box">
           <h2>Step 2: Latent Variables</h2>
 
-          <input
-            type="number"
-            min="1"
-            value={latentCount}
-            onChange={e => setLatentCount(+e.target.value)}
-          />
-          <button onClick={() => setLatent(Array(latentCount).fill(""))}>
-            Create
-          </button>
-
-          {latent.map((v, i) => (
+          <div className="input-row">
             <input
-              key={i}
-              placeholder={`Latent variable ${i + 1}`}
-              value={v}
-              onChange={e => {
-                const copy = [...latent];
-                copy[i] = e.target.value;
-                setLatent(copy);
-              }}
+              type="number"
+              min="1"
+              value={latentCount}
+              onChange={e => setLatentCount(+e.target.value)}
             />
-          ))}
+            <button onClick={() => setLatent(Array(latentCount).fill(""))}>
+              Create
+            </button>
+          </div>
+
+          <div id="latentInputs">
+            {latent.map((v, i) => (
+              <input
+                key={i}
+                type="text"
+                placeholder={`Latent variable ${i + 1}`}
+                value={v}
+                onChange={e => {
+                  const copy = [...latent];
+                  copy[i] = e.target.value;
+                  setLatent(copy);
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         {/* STEP 3 */}
@@ -204,28 +240,33 @@ export default function App() {
         <div className="box">
           <h2>Step 4: Output Variables</h2>
 
-          <input
-            type="number"
-            min="1"
-            value={outputCount}
-            onChange={e => setOutputCount(+e.target.value)}
-          />
-          <button onClick={() => setOutputs(Array(outputCount).fill(""))}>
-            Create
-          </button>
-
-          {outputs.map((v, i) => (
+          <div className="input-row">
             <input
-              key={i}
-              placeholder={`Output variable ${i + 1}`}
-              value={v}
-              onChange={e => {
-                const copy = [...outputs];
-                copy[i] = e.target.value;
-                setOutputs(copy);
-              }}
+              type="number"
+              min="1"
+              value={outputCount}
+              onChange={e => setOutputCount(+e.target.value)}
             />
-          ))}
+            <button onClick={() => setOutputs(Array(outputCount).fill(""))}>
+              Create
+            </button>
+          </div>
+
+          <div id="outputInputs">
+            {outputs.map((v, i) => (
+              <input
+                key={i}
+                type="text"
+                placeholder={`Output variable ${i + 1}`}
+                value={v}
+                onChange={e => {
+                  const copy = [...outputs];
+                  copy[i] = e.target.value;
+                  setOutputs(copy);
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

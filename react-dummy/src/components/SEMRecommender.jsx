@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MCQGate from "./MCQGate";
 
 /* 🔑 MULTIPLE API KEYS (ROTATION SAFE) */
 const API_KEYS = [
@@ -37,24 +38,9 @@ Constraints:
 - Each latent must have at least 2 observed indicators.
 - Latent variables must not appear in outputs.
 - Observed variables must not appear in latent or outputs.
-
-OUTPUT FORMAT (JSON ONLY):
-
-[
-  {
-    "observed": ["", ""],
-    "latent": [""],
-    "outputs": [""]
-  },
-  {
-    "observed": ["", ""],
-    "latent": [""],
-    "outputs": [""]
-  }
-]
 `;
 
-/* 🛟 GUARANTEED FALLBACK (NEVER FAILS) */
+/* 🛟 FALLBACK */
 function fallbackExamples(topic) {
   return [
     {
@@ -70,23 +56,21 @@ function fallbackExamples(topic) {
   ];
 }
 
-/* 🔧 SAFE JSON EXTRACTOR */
+/* 🔧 JSON EXTRACTOR */
 function extractJSONArray(text) {
-  if (!text) throw new Error("Empty AI response");
-
-  text = text.replace(/```json|```/gi, "").trim();
-  const match = text.match(/\[[\s\S]*\]/);
-  if (!match) throw new Error("No JSON array found");
-
+  if (!text) throw new Error("Empty response");
+  const match = text.replace(/```json|```/gi, "").match(/\[[\s\S]*\]/);
+  if (!match) throw new Error("Invalid JSON");
   return JSON.parse(match[0]);
 }
 
 export default function SEMRecommender() {
   const [topic, setTopic] = useState("");
   const [examples, setExamples] = useState([]);
-  const [remaining, setRemaining] = useState(2);
+  const [remaining, setRemaining] = useState(1); // 🔥 1 FREE TRY
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showGate, setShowGate] = useState(false);
 
   async function fetchExamples(retry = false) {
     if (!topic.trim()) {
@@ -95,7 +79,7 @@ export default function SEMRecommender() {
     }
 
     if (remaining <= 0) {
-      setError("Free tries exhausted.");
+      setShowGate(true);
       return;
     }
 
@@ -115,10 +99,7 @@ export default function SEMRecommender() {
               { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
               { role: "user", parts: [{ text: topic }] }
             ],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 900
-            }
+            generationConfig: { temperature: 0.2 }
           })
         }
       );
@@ -129,24 +110,22 @@ export default function SEMRecommender() {
       const raw =
         data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-      const parsed = extractJSONArray(raw);
-
-      setExamples(parsed);
+      setExamples(extractJSONArray(raw));
     } catch (err) {
-      // 🔁 TRY NEXT KEY ONCE
-      if (!retry && API_KEYS.length > 1) {
+      if (!retry) {
         rotateKey();
         fetchExamples(true);
         return;
       }
-
-      // 🛟 FINAL GUARANTEE: FALLBACK
-      console.warn("⚠️ AI failed, using fallback examples");
       setExamples(fallbackExamples(topic));
-      setError("");
     } finally {
       setLoading(false);
     }
+  }
+
+  function unlockAfterMCQ() {
+    setRemaining(1);     // 🔓 give 1 more try
+    setShowGate(false);
   }
 
   function applyExample(ex) {
@@ -156,9 +135,9 @@ export default function SEMRecommender() {
     }
 
     window.applySEMFromAI({
-      observed: ex.observed || [],
-      latent: ex.latent || [],
-      outputs: ex.outputs || []
+      observed: ex.observed,
+      latent: ex.latent,
+      outputs: ex.outputs
     });
   }
 
@@ -166,19 +145,15 @@ export default function SEMRecommender() {
     <div className="box">
       <h2>🔍 SEM Example Recommender</h2>
 
-      <p className="hint">
-        Enter any topic and get SEM-ready examples.
-      </p>
+      <input
+        value={topic}
+        onChange={e => setTopic(e.target.value)}
+        placeholder="enter any topic"
+      />
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <input
-          value={topic}
-          onChange={e => setTopic(e.target.value)}
-          placeholder="e.g., ghost dancer man"
-          style={{ flex: 1 }}
-        />
-        <strong>Free tries: {remaining}</strong>
-      </div>
+      <p>
+        <strong>Free tries left:</strong> {remaining}
+      </p>
 
       <button onClick={fetchExamples} disabled={loading}>
         {loading ? "Generating..." : "Get Examples"}
@@ -189,7 +164,6 @@ export default function SEMRecommender() {
       {examples.map((ex, i) => (
         <div key={i} className="latent-card">
           <h4>📋 Example {i + 1}</h4>
-
           <p><strong>Observed:</strong> {ex.observed.join(", ")}</p>
           <p><strong>Latent:</strong> {ex.latent.join(", ")}</p>
           <p><strong>Output:</strong> {ex.outputs.join(", ")}</p>
@@ -199,6 +173,8 @@ export default function SEMRecommender() {
           </button>
         </div>
       ))}
+
+      {showGate && <MCQGate onSuccess={unlockAfterMCQ} />}
     </div>
   );
 }
