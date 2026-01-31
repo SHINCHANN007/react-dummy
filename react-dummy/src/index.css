@@ -804,3 +804,65 @@ em {
     page-break-inside: avoid;
   }
 }
+
+/* ============================= */
+/* GUESS SIR — CIRCLE LAYOUT     */
+/* ============================= */
+
+.circle-wrap {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 20px auto 0;
+}
+
+.circle-item {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 0;
+}
+
+.circle-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 4 fixed positions in a circle */
+.circle-item:nth-child(1) {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.circle-item:nth-child(2) {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.circle-item:nth-child(3) {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.circle-item:nth-child(4) {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.circle-item:hover {
+  border-color: var(--text-secondary);
+  transform: scale(1.06);
+  z-index: 2;
+}
