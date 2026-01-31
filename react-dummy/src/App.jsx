@@ -133,6 +133,11 @@ useEffect(() => {
     <>
       <h1>SEM Diagram Generator</h1>
 
+      <div className="app-logo">
+  <img src="/rr.png" alt="SEM Generator Logo" />
+</div>
+
+
       <p className="subtitle">
         Build your own SEM model step-by-step to understand how observed variables,
         latent constructs, and outcomes are connected.

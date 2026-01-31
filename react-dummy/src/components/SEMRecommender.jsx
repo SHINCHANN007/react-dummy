@@ -162,7 +162,7 @@ export default function SEMRecommender() {
       {error && <p className="warning">{error}</p>}
 
       {examples.map((ex, i) => (
-        <div key={i} className="latent-card">
+        <div key={i} className="example-card">
           <h4>📋 Example {i + 1}</h4>
           <p><strong>Observed:</strong> {ex.observed.join(", ")}</p>
           <p><strong>Latent:</strong> {ex.latent.join(", ")}</p>

@@ -866,3 +866,114 @@ em {
   transform: scale(1.06);
   z-index: 2;
 }
+/* ============================= */
+/* FLOATING LOGO ABOVE STRIPS    */
+/* ============================= */
+
+.logo-strip-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 160px;      /* space reserved for strips + logo */
+  margin: 24px 0 32px 0;
+}
+
+/* STRIPS — BACKGROUND LAYER */
+.moving-strips {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Strip rows */
+.strip {
+  white-space: nowrap;
+  font-family: "Courier New", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  opacity: 0.28;
+  padding: 6px 0;
+  width: max-content;
+}
+
+/* Motion */
+.strip.left {
+  animation: scrollLeft 32s linear infinite;
+}
+
+.strip.right {
+  animation: scrollRight 34s linear infinite;
+}
+
+.strip.slow {
+  animation-duration: 48s;
+}
+
+/* Animations */
+@keyframes scrollLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes scrollRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+/* ============================= */
+/* HEADER LOGO — CLEAN VERSION   */
+/* ============================= */
+
+.app-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0 16px;
+}
+
+.app-logo img {
+  width: clamp(220px, 18vw, 280px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 32px rgba(0,0,0,0.75));
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .app-logo img {
+    width: 90px;
+  }
+}
+
+/* ============================= */
+/* MOBILE                        */
+/* ============================= */
+
+@media (max-width: 768px) {
+  .strip-row {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-gap {
+    display: none;
+  }
+
+  .logo-slot img {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-full {
+    display: none;
+  }
+}
+
+.example-card {
+  width: 100%;
+}
