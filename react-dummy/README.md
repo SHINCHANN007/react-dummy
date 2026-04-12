@@ -1,16 +1,41 @@
-# React + Vite
+# SEM Engine & Visualizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A structural equation modeling (SEM) calculator and path diagram visualizer built with React. Enter your variable relationships, compute SEM metrics, and get AI-generated examples to test with — powered by the Gemini API.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Calculates complex variable relationships in SEM models
+- Visualizes path diagrams to make abstract SEM theory concrete
+- Built-in AI example recommender — enter a topic and get relevant SEM test cases generated via Gemini
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+React, JavaScript, Vite, Gemini API
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Clone the repo
+
+git clone https://github.com/SHINCHANN007/react-dummy.git
+cd react-dummy/react-dummy
+
+### 2. Install dependencies
+
+npm install
+
+### 3. Add your Gemini API key
+
+Create a `.env` file in the root and add:
+
+VITE_GEMINI_API_KEY=your_api_key_here
+
+You can get a free API key at https://aistudio.google.com/app/apikey
+
+### 4. Run the app
+
+npm run dev
+
+## Notes
+
+- No live demo currently — run locally using the steps above
+- Gemini API key required for the example recommender feature
